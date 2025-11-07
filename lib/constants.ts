@@ -1,0 +1,86 @@
+// Centralized list of curated developer events that can be used across the app
+// Matches the props expected by `EventCard` (title, image, slug, location, date, time)
+// Note: Images are expected under `public/images` and referenced with absolute paths like `/images/...`
+
+export const events = [
+  {
+    title: "AWS re:Invent 2025",
+    image: "/images/event1.png",
+    slug: "aws-reinvent-2025",
+    location: "Las Vegas, USA",
+    date: "Dec 1–5, 2025",
+    time: "09:00 AM — 6:00 PM",
+  },
+  {
+    title: "Web Summit 2025",
+    image: "/images/event4.png",
+    slug: "web-summit-2025",
+    location: "Lisbon, PT",
+    date: "Nov 10–13, 2025",
+    time: "10:00 AM — 6:00 PM",
+  },
+  {
+    title: "DevTernity 2025",
+    image: "/images/event5.png",
+    slug: "devternity-2025",
+    location: "Riga, LV + Online",
+    date: "Dec 12, 2025",
+    time: "09:00 AM — 6:00 PM",
+  },
+  {
+    title: "Google Cloud Next 2026",
+    image: "/images/event2.png",
+    slug: "google-cloud-next-2026",
+    location: "San Francisco, USA",
+    date: "Apr 7–9, 2026",
+    time: "09:00 AM — 5:00 PM",
+  },
+  {
+    title: "Microsoft Build 2026",
+    image: "/images/event3.png",
+    slug: "microsoft-build-2026",
+    location: "Seattle, USA + Online",
+    date: "May 18–20, 2026",
+    time: "08:30 AM — 5:30 PM",
+  },
+  {
+    title: "React Summit 2026",
+    image: "/images/event4.png",
+    slug: "react-summit-2026",
+    location: "Amsterdam, NL + Online",
+    date: "Jun 12, 2026",
+    time: "09:00 AM — 6:00 PM",
+  },
+  {
+    title: "KubeCon + CloudNativeCon Europe 2026",
+    image: "/images/event5.png",
+    slug: "kubecon-eu-2026",
+    location: "Vienna, AT",
+    date: "Mar 30 – Apr 3, 2026",
+    time: "09:00 AM — 6:00 PM",
+  },
+  {
+    title: "ETHGlobal Hackathon: New York 2026",
+    image: "/images/event6.png",
+    slug: "ethglobal-ny-2026",
+    location: "New York, USA",
+    date: "Sep 18–20, 2026",
+    time: "48-hour Hackathon",
+  },
+  {
+    title: "JSConf Budapest 2026",
+    image: "/images/event3.png",
+    slug: "jsconf-budapest-2026",
+    location: "Budapest, HU",
+    date: "Sep 10–12, 2026",
+    time: "09:30 AM — 5:30 PM",
+  },
+  {
+    title: "PyCon US 2026",
+    image: "/images/event2.png",
+    slug: "pycon-us-2026",
+    location: "Pittsburgh, USA",
+    date: "Apr 23–May 1, 2026",
+    time: "09:00 AM — 6:00 PM",
+  },
+] as const;
