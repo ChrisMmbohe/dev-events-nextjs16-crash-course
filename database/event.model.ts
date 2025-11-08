@@ -30,6 +30,7 @@ const EventSchema = new Schema<IEvent>(
     slug: {
       type: String,
       unique: true,
+      required: [true, 'Slug is required'],
       lowercase: true,
       trim: true,
     },
@@ -113,26 +114,85 @@ EventSchema.index({ slug: 1 }, { unique: true });
  * - Validates and normalizes date to ISO format (YYYY-MM-DD)
  * - Ensures time is stored in consistent HH:MM format
  */
-EventSchema.pre('save', async function (next) {
-  // Generate slug from title if title is modified or document is new
-  if (this.isModified('title')) {
-    this.slug = this.title
+// Use pre-validate hook so slug is present before Mongoose runs validation
+EventSchema.pre('validate', async function (next) {
+  // Generate slug from title if title is modified or slug is missing
+  if ((this.isNew && !this.slug) || this.isModified('title')) {
+    const base = this.title
       .toLowerCase()
       .trim()
       .replace(/[^\w\s-]/g, '') // Remove special characters
       .replace(/\s+/g, '-') // Replace spaces with hyphens
       .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
       .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
+
+    const generateShortId = () => {
+      // Generate a 6-character random string using a URL-safe alphabet
+      const alphabet = '0123456789abcdefghijklmnopqrstuvwxyz';
+      return Array.from(
+        { length: 6 },
+        () => alphabet[Math.floor(Math.random() * alphabet.length)]
+      ).join('');
+    };
+
+    let candidate = base || 'untitled';
+    // First try without a suffix
+    const Model = (this.constructor as Model<IEvent>);
+    let exists = await Model.findOne({
+      slug: candidate,
+      _id: { $ne: this._id },
+    }).lean().exec();
+    
+    // If conflict exists, append a short random id
+    if (exists) {
+      // Try up to 3 times with different random suffixes
+      for (let attempts = 0; attempts < 3; attempts++) {
+        candidate = `${base}-${generateShortId()}`;
+        exists = await Model.findOne({
+          slug: candidate,
+          _id: { $ne: this._id },
+        }).lean().exec();
+        if (!exists) break;
+      }
+      
+      // If we still have a conflict after 3 attempts, use timestamp + random
+      if (exists) {
+        const timestamp = Date.now().toString(36);
+        candidate = `${base}-${timestamp}${generateShortId()}`;
+      }
+    }
+    
+    this.slug = candidate;
   }
 
-  // Normalize date to ISO format (YYYY-MM-DD)
+  // Normalize date (preserve calendar date regardless of server timezone)
   if (this.isModified('date')) {
-    const dateObj = new Date(this.date);
-    if (isNaN(dateObj.getTime())) {
-      throw new Error('Invalid date format');
+    if (typeof this.date !== 'string') {
+      throw new Error('Date must be a string in YYYY-MM-DD format');
     }
-    // Store in ISO format (YYYY-MM-DD)
-    this.date = dateObj.toISOString().split('T')[0];
+    // Match YYYY-MM-DD
+    const m = this.date.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) {
+      throw new Error('Date must be in YYYY-MM-DD format');
+    }
+    const yyyy = parseInt(m[1], 10);
+    const mm = parseInt(m[2], 10);
+    const dd = parseInt(m[3], 10);
+
+    // Construct a UTC date from components
+    const utc = new Date(Date.UTC(yyyy, mm - 1, dd));
+    if (
+      utc.getUTCFullYear() !== yyyy ||
+      utc.getUTCMonth() + 1 !== mm ||
+      utc.getUTCDate() !== dd
+    ) {
+      throw new Error('Invalid date components');
+    }
+
+    // Store normalized calendar date string (not toISOString())
+    const mmStr = String(mm).padStart(2, '0');
+    const ddStr = String(dd).padStart(2, '0');
+    this.date = `${yyyy}-${mmStr}-${ddStr}`;
   }
 
   // Normalize time to HH:MM format
